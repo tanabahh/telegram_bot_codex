@@ -1,16 +1,23 @@
-# -*- coding: utf-8 -*-
+import time
 import requests
 from yaml import safe_load
 from lxml import html
 from datetime import datetime
-httpsProxy = "https://118.97.151.130:9090"
-httpProxy = "http://210.212.73.61:80"
+#from apscheduler.schedulers.background import BackgroundScheduler
+#from apscheduler.triggers.combining import AndTrigger
+#from apscheduler.triggers.interval import IntervalTrigger
+#from apscheduler.triggers.cron import CronTrigger
 
-prox = {
-    "http": httpProxy,
-    "https": httpsProxy
-}
 
+#httpsProxy = "https://118.97.151.130:9090"
+#httpProxy = "http://210.212.73.61:80"
+
+#prox = {
+#    "http": httpProxy,
+#    "https": httpsProxy
+#}
+
+#разбор конфига
 with open("config", 'r') as config_file:
     config_dict = safe_load(config_file)
 
@@ -19,20 +26,49 @@ tasks = tasks[0]
 url = tasks["url"]
 xpath = tasks["xpath"]
 max_secs = tasks["max-secs-without-changes"]
-message = tasks["messages"]
+message_first = tasks["messages"]['first']
+message_second = tasks["messages"]['second']
+message_finish = tasks["messages"]['finish']
+schedule = tasks['schedule']
+
+
+#поиск нужного элемента для считывания времени последнего поста
 def find(url, xpath, proxies= None):
     response = requests.get(url, proxies=proxies).text
     tree = html.fromstring(response)
     elem = tree.xpath(xpath)
-    return elem
+    element = html.tostring(elem[0])
+    return element
 
-elem = find(url, xpath,proxies=prox)
-post_date = elem[0].attrib['datetime']
-def check_post(post_date):
-    date_pattern = "%Y-%m-%dT%H:%M:%S"
-    post_date = datetime.strptime(post_date.split("+")[0], date_pattern)
-    delta = datetime.now() - post_date
-    return delta.total_seconds() >= max_secs
-check_post(post_date)
-webhook = 'https://notify.bot.codex.so/u/H97FIRDA'
-requests.post(webhook, data={"message":message.encode('cp1251')})
+#проверка был ли пост
+def check_post():
+    elem = find(url, xpath)
+    post_date = hash(elem)  # сохранять хэш проверять время сравнивать не по времени!
+    f = open('hash.txt', 'r')
+    hashfile = []
+    for line in f:
+        hashfile.append(line)
+    if post_date == hashfile[0]:
+        hashfile[1] = datetime.strptime(hashfile[1], "%Y-%m-%d+%H:%M:%S")
+        return hashfile[1] - datetime.now() >= max_secs
+    else:
+        updatefile(post_date)
+        return False
+
+def updatefile(post_date):
+    f = open('hash.txt', 'w')
+    f.write(str(post_date)+'\n'+str(datetime.now()))
+
+
+#бот
+def manager():
+    if check_post():
+        webhook = 'https://notify.bot.codex.so/u/H97FIRDA'
+        requests.post(webhook, data={"message": message_first[0].encode('cp1251')})
+
+#scheduler = BackgroundScheduler()
+#trigger = AndTrigger([IntervalTrigger(hours=1), CronTrigger(day_of_week='sat,sun')])
+#scheduler.add_job(manager(), trigger)
+
+manager()
+

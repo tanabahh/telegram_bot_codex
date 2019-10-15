@@ -15,4 +15,9 @@ tasks:
     schedule: '29 13-20 * * 1-5'
 
     # messages list to be send
-    messages: 'Хэй, ты забыл про пост'
+    messages: {
+
+      first:['Хэй, ты забыл про пост','Hello my dear', 'Ну что, опять не загрузил'],
+      second:[],
+      finish:['Умница моя']
+      }
