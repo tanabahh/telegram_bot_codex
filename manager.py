@@ -1,13 +1,9 @@
-import time
 import requests
 from yaml import safe_load
 from lxml import html
 from datetime import datetime
-#from apscheduler.schedulers.background import BackgroundScheduler
-#from apscheduler.triggers.combining import AndTrigger
-#from apscheduler.triggers.interval import IntervalTrigger
-#from apscheduler.triggers.cron import CronTrigger
-
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 #httpsProxy = "https://118.97.151.130:9090"
 #httpProxy = "http://210.212.73.61:80"
@@ -66,9 +62,9 @@ def manager():
         webhook = 'https://notify.bot.codex.so/u/H97FIRDA'
         requests.post(webhook, data={"message": message_first[0].encode('cp1251')})
 
-#scheduler = BackgroundScheduler()
-#trigger = AndTrigger([IntervalTrigger(hours=1), CronTrigger(day_of_week='sat,sun')])
-#scheduler.add_job(manager(), trigger)
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(manager(), CronTrigger.from_crontab(schedule))
 
 manager()
 
