@@ -62,9 +62,8 @@ def manager():
         webhook = 'https://notify.bot.codex.so/u/H97FIRDA'
         requests.post(webhook, data={"message": message_first[0].encode('cp1251')})
 
-
 scheduler = BackgroundScheduler()
-scheduler.add_job(manager(), CronTrigger.from_crontab(schedule))
+scheduler.add_job(manager, CronTrigger.from_crontab(schedule))
 
 manager()
 
